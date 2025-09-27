@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Вход — Calls</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Вход / Регистрация</h1>
+      <div id="step-phone">
+        <input id="phone" placeholder="+380XXXXXXXXX" />
+        <button id="send-code">Получить код</button>
+      </div>
+      <div id="step-code" style="display:none;">
+        <input id="code" placeholder="Код из SMS" />
+        <button id="verify-code">Подтвердить</button>
+      </div>
+      <div id="msg" class="msg"></div>
+    </div>
+  </div>
+<script src="/app.js"></script>
+</body>
+</html>

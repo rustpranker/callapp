@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dashboard — Calls</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body class="theme-default">
+  <header class="topbar">
+    <div class="top-left brand">CALLS</div>
+    <div class="top-center">
+      <button id="btn-settings" class="top-btn">Настройки</button>
+      <button id="btn-support" class="top-btn">Поддержка</button>
+    </div>
+    <div class="top-right" id="profile-circle">U</div>
+  </header>
+  <main class="main-area">
+    <aside class="left-panel">
+      <h3>История звонков</h3>
+      <div id="calls-list"><div class="no-calls">Еще нету звонков ? Быстрее начинайте свой первый разговор !</div></div>
+    </aside>
+    <section class="center-panel">
+      <div class="call-box">
+        <h2>Наберите номер</h2>
+        <input id="target" placeholder="+380XXXXXXXXX" />
+        <button id="btn-call">📞 Позвонить</button>
+        <div id="status" class="msg"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- settings modal -->
+  <div id="modal-settings" class="modal hidden">
+    <div class="modal-content">
+      <h3>Настройки</h3>
+      <label>Язык</label>
+      <select id="lang-select"><option value="ru">Русский</option><option value="en">English</option><option value="uk">Українська</option></select>
+      <label>Тема</label>
+      <select id="theme-select"><option value="default">Тёмная</option><option value="light">Светлая</option><option value="green">Зелёная</option><option value="red">Красная</option><option value="blue">Синяя</option><option value="pink">Розовая</option><option value="brown">Коричневая</option></select>
+      <label>Ник</label>
+      <input id="nick" placeholder="Ник" />
+      <button id="save-settings">Сохранить</button>
+      <button id="close-settings">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- support modal -->
+  <div id="modal-support" class="modal hidden">
+    <div class="modal-content">
+      <h3>Поддержка</h3>
+      <p>Если у вас появились дополнительные вопросы по нашему сайту или заявки по багам обязательно контактируйте по почте: <a href="mailto:qerrsxf910@gmail.com">qerrsxf910@gmail.com</a></p>
+      <button id="close-support">Закрыть</button>
+    </div>
+  </div>
+
+<script src="/app.js"></script>
+</body>
+</html>
