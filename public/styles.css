@@ -1,21 +1,97 @@
-body { font-family: Arial, Helvetica, sans-serif; margin:0; background: #0b69ff; color:#fff; }
-.wrap{ display:flex; align-items:center; justify-content:center; height:100vh; }
-.card{ background: rgba(0,0,0,0.5); padding:20px; border-radius:8px; width:320px; text-align:center; }
-input{ padding:8px; width:100%; margin:8px 0; border-radius:6px; border:1px solid rgba(255,255,255,0.15); background:transparent; color:#fff; }
-button{ padding:10px 12px; border-radius:8px; border:0; cursor:pointer; background:#6e2bd6; color:#fff; }
-.msg{ margin-top:8px; color:#ffdddd; }
+/* Skype-like visual theme (overrides) */
+:root {
+  --sky-blue: #00a2ff;
+  --deep-blue: #0078d7;
+  --bg: linear-gradient(180deg, #e6f4ff 0%, #f7fbff 100%);
+  --panel-bg: rgba(255,255,255,0.85);
+  --muted: rgba(0,0,0,0.45);
+  --radius: 14px;
+  --shadow: 0 8px 22px rgba(3,30,66,0.12);
+}
 
-.topbar{ height:56px; display:flex; align-items:center; justify-content:space-between; background:linear-gradient(90deg,#6e2bd6,#9a63ff); padding:0 12px; }
-.main-area{ display:flex; height:calc(100vh - 56px); }
-.left-panel{ width:320px; background: rgba(0,0,0,0.25); padding:12px; overflow:auto; }
-.center-panel{ flex:1; display:flex; align-items:center; justify-content:center; }
-.call-box{ background: rgba(255,255,255,0.03); padding:18px; border-radius:12px; width:420px; text-align:center; }
-.no-calls{ padding:16px; background: rgba(0,0,0,0.2); border-radius:8px; }
+body {
+  background: var(--bg);
+  color: #03203a;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}
 
-.modal{ position:fixed; left:0; top:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); }
-.modal.hidden{ display:none }
-.modal-content{ background:#111; padding:18px; border-radius:10px; width:380px; color:#fff; }
+/* Top bar */
+.topbar {
+  height: 64px;
+  background: linear-gradient(90deg, var(--sky-blue), var(--deep-blue));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  box-shadow: 0 4px 14px rgba(3,30,66,0.12);
+  gap: 12px;
+}
+.topbar .brand { font-weight: 700; font-size: 20px; }
 
-.call-screen{ display:flex; align-items:center; justify-content:center; height:100vh; background: linear-gradient(135deg,#003b6b,#0068ff); }
-.phone-center{ text-align:center; background:rgba(0,0,0,0.25); padding:20px; border-radius:12px; }
-.controls{ margin-top:12px; display:flex; gap:10px; justify-content:center; }
+/* Call screen */
+.call-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+}
+.phone-center {
+  width: 460px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 12px 30px rgba(3,30,66,0.14);
+  text-align: center;
+}
+.phone-icon {
+  font-size: 64px;
+  width: 112px;
+  height: 112px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--sky-blue), var(--deep-blue));
+  color: #fff;
+}
+#call-timer {
+  font-weight: 600;
+  font-size: 20px;
+  margin-bottom: 14px;
+  color: var(--muted);
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.controls button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 0;
+  background: #f0f8ff;
+  box-shadow: 0 8px 18px rgba(3,30,66,0.08);
+  cursor: pointer;
+  color: var(--deep-blue);
+}
+#end-btn {
+  width: 112px;
+  height: 48px;
+  border-radius: 24px;
+  background: linear-gradient(90deg, #ff5b6f, #ff2d4b);
+  color: #fff;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
