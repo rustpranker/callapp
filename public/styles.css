@@ -1,97 +1,186 @@
-/* Skype-like visual theme (overrides) */
-:root {
-  --sky-blue: #00a2ff;
-  --deep-blue: #0078d7;
-  --bg: linear-gradient(180deg, #e6f4ff 0%, #f7fbff 100%);
-  --panel-bg: rgba(255,255,255,0.85);
-  --muted: rgba(0,0,0,0.45);
-  --radius: 14px;
-  --shadow: 0 8px 22px rgba(3,30,66,0.12);
+/* style.css — Skype-like UI
+   Author: ChatGPT
+   Notes: This stylesheet is intended to be dropped in as your project's main stylesheet
+   without changing underlying HTML structure or JS logic. It provides styles for a
+   two-column chat app with a contact list (sidebar), main chat area, message bubbles,
+   composer, and a call modal (incoming/ongoing call UI similar to Skype).
+
+   Expected (recommended) HTML class names (no required changes — these are suggestions
+   so your JS can continue to work while styles apply):
+     - .app-container
+     - .sidebar, .sidebar .profile, .sidebar .search, .contacts, .contact
+     - .main, .main .header, .conversation, .messages, .message (.sent / .received)
+     - .composer, .composer textarea, .composer .actions
+     - .call-modal, .call-screen, .call-avatar, .call-controls, .call-btn
+
+   Tweak selectors if your HTML uses different class names. This CSS attempts to be
+   non-destructive and scoped to the high-level class names above.
+*/
+
+:root{
+  --bg: #f2f7fb;
+  --primary: #00a3e0; /* Skype blue */
+  --primary-600: #008ccf;
+  --primary-700: #0078b8;
+  --muted: #6b7a86;
+  --surface: #ffffff;
+  --glass: rgba(255,255,255,0.7);
+  --accent: #2dd4bf;
+  --danger: #e85050;
+  --radius: 12px;
+  --shadow: 0 6px 18px rgba(16,24,40,0.08);
+  --soft-shadow: 0 2px 6px rgba(16,24,40,0.06);
+  --trans: 180ms cubic-bezier(.2,.9,.2,1);
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-body {
-  background: var(--bg);
-  color: #03203a;
-  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+/* Reset / base */
+*{box-sizing: border-box}
+html,body,#app{height:100%}
+body{
+  margin:0;
+  background: linear-gradient(180deg, #eaf6ff 0%, var(--bg) 100%);
+  color: #0f1724;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  font-size:14px;
 }
 
-/* Top bar */
-.topbar {
-  height: 64px;
-  background: linear-gradient(90deg, var(--sky-blue), var(--deep-blue));
-  color: #fff;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  box-shadow: 0 4px 14px rgba(3,30,66,0.12);
-  gap: 12px;
-}
-.topbar .brand { font-weight: 700; font-size: 20px; }
-
-/* Call screen */
-.call-screen {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-}
-.phone-center {
-  width: 460px;
-  background: rgba(255,255,255,0.95);
-  border-radius: 18px;
-  padding: 22px;
-  box-shadow: 0 12px 30px rgba(3,30,66,0.14);
-  text-align: center;
-}
-.phone-icon {
-  font-size: 64px;
-  width: 112px;
-  height: 112px;
-  margin: 0 auto 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--sky-blue), var(--deep-blue));
-  color: #fff;
-}
-#call-timer {
-  font-weight: 600;
-  font-size: 20px;
-  margin-bottom: 14px;
-  color: var(--muted);
+/* App layout */
+.app-container{
+  display:flex;
+  height:100vh;
+  width:100%;
+  gap:18px;
+  padding:20px;
+  align-items:stretch;
 }
 
-/* Controls */
-.controls {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 8px;
+/* Sidebar (contacts) */
+.sidebar{
+  width:320px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(245,251,255,0.9));
+  border-radius: calc(var(--radius) + 4px);
+  padding:16px;
+  box-shadow: var(--shadow);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  min-width:240px;
 }
-.controls button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  border: 0;
-  background: #f0f8ff;
-  box-shadow: 0 8px 18px rgba(3,30,66,0.08);
-  cursor: pointer;
-  color: var(--deep-blue);
+.sidebar .profile{
+  display:flex;
+  gap:12px;
+  align-items:center;
 }
-#end-btn {
-  width: 112px;
-  height: 48px;
-  border-radius: 24px;
-  background: linear-gradient(90deg, #ff5b6f, #ff2d4b);
-  color: #fff;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.sidebar .profile .avatar{
+  width:48px;height:48px;border-radius:50%;overflow:hidden;flex:0 0 48px;
+  box-shadow: var(--soft-shadow);
 }
+.sidebar .profile .meta{display:flex;flex-direction:column}
+.sidebar .profile .name{font-weight:600}
+.sidebar .profile .status{font-size:12px;color:var(--muted)}
+
+.sidebar .search{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;background:#f6fbff;border-radius:999px;
+}
+.sidebar .search input{border:0;background:transparent;outline:none;width:100%;font-size:13px}
+
+.contacts{overflow:auto;padding-right:6px}
+.contact{
+  display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;cursor:pointer;
+  transition:background var(--trans), transform 120ms ease;
+}
+.contact:hover{background:rgba(0,163,224,0.06);transform:translateY(-2px)}
+.contact .avatar{width:44px;height:44px;border-radius:50%;overflow:hidden;flex:0 0 44px}
+.contact .info{flex:1;min-width:0}
+.contact .info .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.contact .info .preview{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.contact .badge{min-width:20px;height:20px;border-radius:999px;background:var(--primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+
+/* Main chat area */
+.main{
+  flex:1;display:flex;flex-direction:column;min-width:0;height:100%;
+}
+.main .header{
+  display:flex;align-items:center;gap:12px;padding:14px 18px;background:transparent;
+  border-radius:10px;
+}
+.main .header .chat-title{font-weight:700;font-size:16px}
+.main .header .chat-meta{color:var(--muted);font-size:13px}
+
+.conversation{
+  flex:1;display:flex;flex-direction:column;background:transparent;padding:12px 18px;border-radius:12px;overflow:hidden;
+}
+.messages{
+  flex:1;overflow:auto;padding:18px 10px 20px 10px;display:flex;flex-direction:column;gap:12px;
+}
+
+/* Message bubbles */
+.message{
+  max-width:78%;display:flex;gap:10px;align-items:flex-end;line-height:1.3;
+}
+.message .bubble{padding:10px 14px;border-radius:16px;box-shadow:var(--soft-shadow);font-size:14px}
+.message.received{align-self:flex-start}
+.message.received .bubble{background:linear-gradient(180deg,#ffffff,#f6fcff);border:1px solid rgba(16,24,40,0.03)}
+.message.received .avatar{width:36px;height:36px;border-radius:50%;flex:0 0 36px}
+
+.message.sent{align-self:flex-end;flex-direction:row-reverse}
+.message.sent .bubble{background:linear-gradient(180deg,var(--primary),var(--primary-700));color:#fff}
+
+.message .meta{font-size:12px;color:var(--muted);margin-top:6px}
+
+/* Composer */
+.composer{display:flex;gap:10px;padding:12px;border-radius:12px;background:linear-gradient(180deg,#ffffff,#f9fdff);align-items:center;box-shadow:var(--soft-shadow)}
+.composer textarea{resize:none;border:0;outline:none;padding:10px 12px;border-radius:10px;background:transparent;flex:1;font-size:14px}
+.composer .actions{display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;padding:8px 10px;border:0;background:transparent;cursor:pointer;transition:transform 120ms ease}
+.btn:hover{transform:translateY(-2px)}
+
+.btn-primary{background:var(--primary);color:white;box-shadow:0 8px 20px rgba(0,163,224,0.12)}
+.btn-icon{width:40px;height:40px;border-radius:10px;background:#f1f7fb}
+
+/* Call / incoming call UI */
+.call-modal{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:1200;
+  backdrop-filter: blur(6px);
+}
+.call-modal .overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,32,53,0.45),rgba(2,12,26,0.5));}
+.call-screen{
+  position:relative;z-index:2;width:min(900px,94%);max-width:900px;border-radius:16px;padding:28px;display:flex;gap:22px;align-items:center;
+  background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));box-shadow:0 30px 80px rgba(2,12,26,0.6);
+  border:1px solid rgba(255,255,255,0.06);
+}
+.call-avatar{width:220px;height:220px;border-radius:50%;overflow:hidden;flex:0 0 220px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#dff6ff,#eafcff);box-shadow:var(--soft-shadow)}
+.call-info{flex:1;color:#fff}
+.call-info .who{font-size:24px;font-weight:700}
+.call-info .state{margin-top:8px;color:rgba(255,255,255,0.85);font-size:15px}
+
+.call-controls{display:flex;gap:14px;margin-top:20px}
+.call-btn{width:64px;height:64px;border-radius:999px;display:inline-grid;place-items:center;box-shadow:0 10px 30px rgba(2,12,26,0.4);border:0;cursor:pointer;transition:transform var(--trans)}
+.call-btn:active{transform:scale(.96)}
+.call-btn.mute{background:#1f2937;color:#fff}
+.call-btn.camera{background:#0ea5e9;color:#fff}
+.call-btn.end{background:var(--danger);color:#fff}
+.call-btn.add{background:rgba(255,255,255,0.1);color:#fff}
+
+/* Small responsive tweaks */
+@media (max-width: 920px){
+  .sidebar{display:none}
+  .app-container{padding:10px}
+  .call-screen{flex-direction:column;align-items:center;padding:20px}
+  .call-avatar{width:160px;height:160px}
+}
+
+/* Tiny UI flourishes */
+.pulse{position:relative}
+.pulse::after{content:'';position:absolute;inset:0;border-radius:inherit;box-shadow:0 0 0 8px rgba(0,163,224,0.06);opacity:0;transition:opacity .25s}
+.pulse.online::after{opacity:1}
+
+/* Notifications / call pill */
+.call-pill{position:fixed;right:20px;bottom:20px;background:linear-gradient(90deg,var(--primary),var(--primary-600));color:#fff;padding:10px 14px;border-radius:999px;display:flex;gap:10px;align-items:center;box-shadow:0 8px 30px rgba(0,163,224,0.12)}
+
+/* Accessibility helpers */
+.visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
+
+/* End of file */
