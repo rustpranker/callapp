@@ -3,7 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const bodyParser = require('body-parser');
-const {Twilio} = require('twilio');
+const { Twilio } = require('twilio');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -13,6 +13,11 @@ const authToken = process.env.TWILIO_AUTH_TOKEN;
 const verifySid = process.env.TWILIO_VERIFY_SID;
 const fromNumber = process.env.TWILIO_FROM_NUMBER;
 
+// Для Voice Token
+const apiKey = process.env.TWILIO_API_KEY_SID;
+const apiSecret = process.env.TWILIO_API_KEY_SECRET;
+const appSid = process.env.TWILIO_TWIML_APP_SID;
+
 const client = (accountSid && authToken) ? new Twilio(accountSid, authToken) : null;
 
 app.use(bodyParser.json());
@@ -21,15 +26,15 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'change_this_secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false } // set true if using HTTPS
+  cookie: { secure: false } // ставь true если используешь HTTPS
 }));
 
-// API: send verification code via Twilio Verify
+// ======== AUTH: VERIFY ========
 app.post('/api/send-code', async (req, res) => {
   try {
     const { phone } = req.body;
-    if(!phone) return res.status(400).json({ error: 'Phone required' });
-    if(!client || !verifySid) return res.status(500).json({ error: 'Twilio not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_VERIFY_SID in .env' });
+    if (!phone) return res.status(400).json({ error: 'Phone required' });
+    if (!client || !verifySid) return res.status(500).json({ error: 'Twilio not configured' });
     const verification = await client.verify.services(verifySid).verifications.create({ to: phone, channel: 'sms' });
     return res.json({ ok: true, sid: verification.sid, status: verification.status });
   } catch (err) {
@@ -38,15 +43,13 @@ app.post('/api/send-code', async (req, res) => {
   }
 });
 
-// API: check verification code
 app.post('/api/verify-code', async (req, res) => {
   try {
     const { phone, code } = req.body;
-    if(!phone || !code) return res.status(400).json({ error: 'Phone and code required' });
-    if(!client || !verifySid) return res.status(500).json({ error: 'Twilio not configured' });
+    if (!phone || !code) return res.status(400).json({ error: 'Phone and code required' });
+    if (!client || !verifySid) return res.status(500).json({ error: 'Twilio not configured' });
     const check = await client.verify.services(verifySid).verificationChecks.create({ to: phone, code });
-    if(check.status === 'approved') {
-      // mark session as verified user
+    if (check.status === 'approved') {
       req.session.verified = true;
       req.session.phone = phone;
       return res.json({ ok: true });
@@ -59,49 +62,70 @@ app.post('/api/verify-code', async (req, res) => {
   }
 });
 
-// API: initiate a bridged call: call user first, then connect to target
+// ======== CALL API ========
+// 1) Исходящий звонок: звонит на твой телефон, потом соединяет с target
 app.post('/api/call', async (req, res) => {
   try {
-    if(!req.session || !req.session.verified) return res.status(401).json({ error: 'Not verified' });
+    if (!req.session || !req.session.verified) return res.status(401).json({ error: 'Not verified' });
     const userPhone = req.session.phone;
     const { target } = req.body;
-    if(!target) return res.status(400).json({ error: 'Target number required' });
-    if(!client || !fromNumber) return res.status(500).json({ error: 'Twilio not configured. Set TWILIO_FROM_NUMBER in .env' });
-    // Create an outbound call to the user; when the user answers, Twilio will request /voice with target as query
+    if (!target) return res.status(400).json({ error: 'Target number required' });
+    if (!client || !fromNumber) return res.status(500).json({ error: 'Twilio not configured' });
+
     const call = await client.calls.create({
       to: userPhone,
       from: fromNumber,
       url: `${req.protocol}://${req.get('host')}/voice?target=${encodeURIComponent(target)}`
     });
-    // Save call SID in session (optional)
     req.session.lastCallSid = call.sid;
     return res.json({ ok: true, sid: call.sid });
   } catch (err) {
     console.error('call error', err);
-    // Map common Twilio errors to messages
-    const msg = err.message || 'call failed';
-    return res.status(500).json({ error: msg });
+    return res.status(500).json({ error: err.message || 'call failed' });
   }
 });
 
-// TwiML voice handler: when Twilio calls the user, connect to target number
+// 2) TwiML обработчик: соединяет вызов с target
 app.post('/voice', express.urlencoded({ extended: false }), (req, res) => {
-  // Twilio will POST here when the user answers the call
   const target = req.query.target;
-  // Return TwiML: Dial the target and bridge
-  const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Dial callerId="${fromNumber}">${target}</Dial></Response>`;
+  let twiml = '<?xml version="1.0" encoding="UTF-8"?><Response>';
+
+  if (target) {
+    twiml += `<Dial callerId="${fromNumber}" timeout="20">${target}</Dial>`;
+  } else {
+    twiml += '<Say voice="alice">Извините, абонент недоступен.</Say>';
+  }
+
+  twiml += '</Response>';
   res.type('text/xml');
   res.send(twiml);
 });
 
-// Simple middleware to protect dashboard route
+// ======== TOKEN для Web-клиента (если хочешь звонки прямо из браузера) ========
+app.get('/api/token', (req, res) => {
+  if (!apiKey || !apiSecret || !accountSid) return res.status(500).json({ error: 'Twilio API key not configured' });
+  const AccessToken = Twilio.jwt.AccessToken;
+  const VoiceGrant = AccessToken.VoiceGrant;
+
+  const identity = req.session.phone || 'user-' + Date.now();
+
+  const token = new AccessToken(accountSid, apiKey, apiSecret, { identity });
+  token.addGrant(new VoiceGrant({
+    outgoingApplicationSid: appSid,
+    incomingAllow: true
+  }));
+
+  res.json({ token: token.toJwt(), identity });
+});
+
+// ======== ROUTES ========
 app.get('/dashboard', (req, res) => {
-  if(!req.session || !req.session.verified) return res.redirect('/');
+  if (!req.session || !req.session.verified) return res.redirect('/');
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-app.get('/call', (req,res)=>{
-  if(!req.session || !req.session.verified) return res.redirect('/');
+app.get('/call', (req, res) => {
+  if (!req.session || !req.session.verified) return res.redirect('/');
   res.sendFile(path.join(__dirname, 'public', 'call.html'));
 });
 
