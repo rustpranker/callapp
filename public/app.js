@@ -1,8 +1,10 @@
-// Frontend JS for index/dashboard/call -- consolidated for demo
+// Frontend JS for index/dashboard/call -- consolidated
 (async function(){
   function el(id){return document.getElementById(id);}
+  let device = null;
+  let connection = null;
 
-  // index page elements
+  // ===== AUTH PAGE (index.html) =====
   if(el('send-code')){
     el('send-code').addEventListener('click', async ()=>{
       const phone = el('phone').value.trim();
@@ -29,7 +31,6 @@
         const res = await fetch('/api/verify-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone, code})});
         const data = await res.json();
         if(!res.ok) throw new Error(data.error || 'Ошибка');
-        // redirect to dashboard
         window.location.href = '/dashboard';
       }catch(e){
         el('msg').textContent = e.message;
@@ -37,7 +38,7 @@
     });
   }
 
-  // dashboard page elements
+  // ===== DASHBOARD =====
   if(el('btn-settings')){
     const modalSettings = el('modal-settings');
     const modalSupport = el('modal-support');
@@ -52,7 +53,7 @@
         const data = await res.json();
         if(!res.ok) throw new Error(data.error || 'Ошибка');
         // store history
-        const history = JSON.parse(localStorage.getItem('call_history'||'[]')) || [];
+        const history = JSON.parse(localStorage.getItem('call_history')||'[]');
         history.unshift({target, time: new Date().toISOString()});
         localStorage.setItem('call_history', JSON.stringify(history));
         // go to call page
@@ -78,15 +79,67 @@
     }
   }
 
-  // call page
+  // ===== CALL PAGE =====
   if(el('end-btn')){
     let timer = null; let sec=0;
-    function startTimer(){ timer = setInterval(()=>{ sec++; const mm=Math.floor(sec/60).toString().padStart(2,'0'); const ss=(sec%60).toString().padStart(2,'0'); el('call-timer').textContent = mm + ':' + ss; },1000); }
-    startTimer();
-    el('end-btn').addEventListener('click', async ()=>{
-      // For simplicity, end call just stops timer and shows message
-      clearInterval(timer);
-      document.getElementById('after').style.display='block';
+
+    // --- Twilio init ---
+    async function initTwilio(){
+      const res = await fetch('/api/token');
+      const data = await res.json();
+      device = new Twilio.Device(data.token, {
+        codecPreferences: ['opus', 'pcmu'],
+        fakeLocalDTMF: true,
+        enableRingingState: true
+      });
+
+      device.on('ready', () => console.log('Device ready'));
+      device.on('error', err => console.error('Twilio Error:', err.message));
+      device.on('incoming', conn => {
+        console.log('Incoming call from:', conn.parameters.From);
+        connection = conn;
+        conn.accept();
+      });
+    }
+
+    async function startCall(){
+      if(!device) await initTwilio();
+      connection = device.connect({});
+      connection.on('ringing', ()=> playTone('ringing'));
+      connection.on('accept', ()=>{
+        playTone('connected');
+        startTimer();
+      });
+      connection.on('disconnect', ()=>{
+        playTone('end');
+        stopTimer();
+        document.getElementById('after').style.display='block';
+      });
+      connection.on('error', err=>{
+        playTone('error');
+        console.error(err.message);
+      });
+    }
+
+    function startTimer(){
+      timer = setInterval(()=>{
+        sec++;
+        const mm=Math.floor(sec/60).toString().padStart(2,'0');
+        const ss=(sec%60).toString().padStart(2,'0');
+        el('call-timer').textContent = mm + ':' + ss;
+      },1000);
+    }
+    function stopTimer(){ clearInterval(timer); }
+
+    function playTone(type){
+      const audio = new Audio(`/tones/${type}.mp3`);
+      audio.play().catch(()=>{});
+    }
+
+    // --- buttons ---
+    startCall();
+    el('end-btn').addEventListener('click', ()=>{
+      if(connection) connection.disconnect();
     });
     el('back-btn').addEventListener('click', ()=>{ window.location.href = '/dashboard'; });
   }
